@@ -1,15 +1,32 @@
---background music and image
+--import the objects
 player = require "objects/player"
 Enemy = require "objects/enemy"
 
---More timers
+--some global variables
 createEnemyTimerMax = 0.6
 createEnemyTimer = createEnemyTimerMax
 score = 0
 scale_factor = 0.9
 
--- More storage
-enemies = {} -- array of current enemies on screen
+-- table to store the enemies
+enemies = {}
+
+function love.load()
+    --define a new player
+    player = player:new(love.graphics.getWidth()/2 - 50,love.graphics.getHeight()-150)
+    
+    --initialize the images and sounds
+    background_music = love.audio.newSource("/assets/sounds/Mecha Collection.wav")
+    background_image = love.graphics.newImage("/assets/images/space.jpeg")
+    button_image = love.graphics.newImage("/assets/images/button9090.png")
+    player.image = love.graphics.newImage("/assets/images/plane.png")
+    player.fire_audio = love.audio.newSource("/assets/sounds/gun-sound.wav")
+    player.bullet_image = love.graphics.newImage("/assets/images/bullet.png")
+    enemy_image = love.graphics.newImage("/assets/images/enemy.png")    
+    
+    --play the background music
+    love.audio.play(background_music)
+end
 
 -- Returns true if two boxes overlap, false if they don't
 -- x1,y1 are the left-top coords of the first box, while w1,h1 are its width and height
@@ -21,23 +38,7 @@ function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
          y2 < y1+h1
 end
 
-function love.load()
-    --background music
-    background_music = love.audio.newSource("/assets/sounds/Mecha Collection.wav")
-    background_image = love.graphics.newImage("/assets/images/space.jpeg")
-    button_image = love.graphics.newImage("/assets/images/button9090.png")
-    
-    love.audio.play(background_music)
-
-    player = player:new(love.graphics.getWidth()/2 - 50,love.graphics.getHeight()-150)
-    player.image = love.graphics.newImage("/assets/images/plane.png")
-    player.fire_audio = love.audio.newSource("/assets/sounds/gun-sound.wav")
-    player.bullet_image = love.graphics.newImage("/assets/images/bullet.png")
-    
-    enemy_image = love.graphics.newImage("/assets/images/enemy.png")
-    
-end
-
+-- function to key detection and player movement
 function detectKey(dt)
  if love.keyboard.isDown("right") then
    if player.x < (love.graphics.getWidth() - player.image:getWidth()) then
@@ -60,84 +61,8 @@ function detectKey(dt)
   end
 end 
 
---function love.touchpressed( id, x, y, dx, dy, pressure )
---  dt = love.timer.getDelta()
-  
---    -- touched to right
---    if player.x < x then
---      player.x = player.x + (player.speed * dt)
---      if player.x > x then player.x = x end
-    
-    
---    --touched to left
---    elseif player.x > x then
---      player.x = player.x - (player.speed * dt)
---      if player.x < x then player.x = x end
---    end
-    
---    --touched to down
---    if player.y > y then
---      player.y = player.y - (player.speed * dt)
---      if player.y < y then player.y = y end
-    
-    
---    --touched to up
---    elseif player.y < y then
---      player.y = player.y + (player.speed * dt)
---      if player.y > y then player.y = y end
---    end
---end
-
-function love.touchreleased( id, x, y, dx, dy, pressure )
-    if not player.isAlive then
-      reset()
-    end
-    if button_pressed(x,y) then
-      player:fire()
-    end
-end
-
-function love.keyreleased(key)
-  
-  if (key == "space") then
-    player:fire()
-    
-  elseif not player.isAlive and key == 'r' then
-    reset()
-  end
-end
-
-function reset()
-  player:reset(300,300)
-  enemies = {}
-  score = 0
-  createEnemyTimerMax = 0.6
-end
-
-function love.update(dt)
-  
-  player.cooldown = player.cooldown - 1
-  createEnemyTimerMax = createEnemyTimerMax - 0.0001
-  enemySpawn(dt)
-  detectKey(dt)
-  
-  -- update the bullets positions
-  for i,v in ipairs(player.bullets) do
-    v.y = v.y - (v.speed * dt)
-    if(v.y <= 0) then 
-      table.remove(player.bullets, i)
-    end    
-  end
-  
-    -- update the positions of enemies
-  for i, enemy in ipairs(enemies) do
-    enemy.y = enemy.y + (enemy.speed * dt)
-
-    if enemy.y > love.graphics.getHeight() then -- remove enemies when they pass off the screen
-      table.remove(enemies, i)
-    end
-  end
-  
+-- like keydetected but for touchscreen
+function detectTouch(dt)
   local touches = love.touch.getTouches()
  
   for i, id in ipairs(touches) do
@@ -162,17 +87,76 @@ function love.update(dt)
 
 
     --touched to up
-     elseif player.y < y then
+    elseif player.y < y then
       player.y = player.y + (player.speed * dt)
       if player.y > y then player.y = y end
     end
+  end
+end
+
+-- callback when touch is released
+function love.touchreleased( id, x, y, dx, dy, pressure )
+    -- player is died
+    if not player.isAlive then
+      reset()
+    end
+    -- fire button is pressed
+    if button_pressed(x,y) then
+      player:fire()
+    end
+end
+
+-- like touch relased but for keyboard
+function love.keyreleased(key)  
+  if (key == "space") then
+    player:fire()
     
-    
+  elseif not player.isAlive and key == 'r' then
+    reset()
+  end
+end
+
+-- reset the player, enermies table, dificult and score
+function reset()
+  player:reset(300,300)
+  enemies = {}
+  score = 0
+  createEnemyTimerMax = 0.6
+end
+
+-- update every frame
+function love.update(dt)
+  
+  --player fire cooldown
+  player.cooldown = player.cooldown - 1
+  
+  -- with this timer, will slowly spawn more enermies
+  createEnemyTimerMax = createEnemyTimerMax - 0.0001
+  enemySpawn(dt)
+  detectKey(dt)
+  detectTouch(dt)
+  
+  -- update the bullets positions
+  for i,v in ipairs(player.bullets) do
+    v.y = v.y - (v.speed * dt)
+    if(v.y <= 0) then 
+      table.remove(player.bullets, i)
+    end    
+  end
+  
+    -- update the positions of enemies
+  for i, enemy in ipairs(enemies) do
+    enemy.y = enemy.y + (enemy.speed * dt)
+
+    if enemy.y > love.graphics.getHeight() then -- remove enemies when they pass off the screen
+      table.remove(enemies, i)
+    end
   end
   
   
--- Since there will be fewer enemies on screen than bullets we'll loop them first
--- Also, we need to see if the enemies hit our player
+  
+  
+-- since there will be fewer enemies on screen than bullets we'll loop them first
   for i, enemy in ipairs(enemies) do
     for j, bullet in ipairs(player.bullets) do
       if CheckCollision(enemy.x, enemy.y, enemy.image:getWidth(), enemy.image:getHeight(), 
@@ -183,6 +167,7 @@ function love.update(dt)
       end
     end
 
+    -- check if are collision with player
     if CheckCollision(enemy.x, enemy.y, enemy.image:getWidth(), enemy.image:getHeight(), 
               player.x, player.y, player.image:getWidth(), player.image:getHeight()) and player.isAlive then
       table.remove(enemies, i)
@@ -192,6 +177,7 @@ function love.update(dt)
   end 
 end
 
+--function to spawn enemies, using the timer and random number generator
 function enemySpawn(dt)
     -- Time out enemy creation
   createEnemyTimer = createEnemyTimer - (1 * dt)
@@ -207,18 +193,18 @@ function enemySpawn(dt)
   end
 end
 
+-- check if the fire button was pressed
 function button_pressed(x,y)
-  if x > love.graphics:getWidth() - 200 and x < love.graphics:getWidth() - 110 and y > love.graphics:getHeight() - 180 and y < love.graphics:getHeight() - 90 then
+  if x > love.graphics:getWidth() - 200 and x < love.graphics:getWidth() - 110 and 
+    y > love.graphics:getHeight() - 180 and y < love.graphics:getHeight() - 90 then
     return true
   end
   return false
 end
 
 function love.draw()
-  --background
+  -- draw the background image, rotated by 90 degree to fit mobile screen
   love.graphics.draw(background_image,1024,0,math.rad(90))
-  
-  
   
   -- draw a player
   if player.isAlive then
@@ -237,6 +223,7 @@ function love.draw()
       love.graphics.draw(player.bullet_image, v.x, v.y)
   end
   
+  --change color and print score
   love.graphics.setColor(255, 255, 255)
   love.graphics.print("SCORE: " .. tostring(score), 400, 10)
   
