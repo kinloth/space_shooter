@@ -25,6 +25,7 @@ function love.load()
     --background music
     background_music = love.audio.newSource("/assets/sounds/Mecha Collection.wav")
     background_image = love.graphics.newImage("/assets/images/space.jpeg")
+    button_image = love.graphics.newImage("/assets/images/button9090.png")
     
     love.audio.play(background_music)
 
@@ -57,8 +58,44 @@ function detectKey(dt)
       player.y = player.y - (player.speed * dt)
     end
   end
-
 end 
+
+--function love.touchpressed( id, x, y, dx, dy, pressure )
+--  dt = love.timer.getDelta()
+  
+--    -- touched to right
+--    if player.x < x then
+--      player.x = player.x + (player.speed * dt)
+--      if player.x > x then player.x = x end
+    
+    
+--    --touched to left
+--    elseif player.x > x then
+--      player.x = player.x - (player.speed * dt)
+--      if player.x < x then player.x = x end
+--    end
+    
+--    --touched to down
+--    if player.y > y then
+--      player.y = player.y - (player.speed * dt)
+--      if player.y < y then player.y = y end
+    
+    
+--    --touched to up
+--    elseif player.y < y then
+--      player.y = player.y + (player.speed * dt)
+--      if player.y > y then player.y = y end
+--    end
+--end
+
+function love.touchreleased( id, x, y, dx, dy, pressure )
+    if not player.isAlive then
+      reset()
+    end
+    if button_pressed(x,y) then
+      player:fire()
+    end
+end
 
 function love.keyreleased(key)
   
@@ -66,11 +103,15 @@ function love.keyreleased(key)
     player:fire()
     
   elseif not player.isAlive and key == 'r' then
-    player:reset(300,300)
-    enemies = {}
-    score = 0
-    createEnemyTimerMax = 0.6
+    reset()
   end
+end
+
+function reset()
+  player:reset(300,300)
+  enemies = {}
+  score = 0
+  createEnemyTimerMax = 0.6
 end
 
 function love.update(dt)
@@ -95,6 +136,38 @@ function love.update(dt)
     if enemy.y > love.graphics.getHeight() then -- remove enemies when they pass off the screen
       table.remove(enemies, i)
     end
+  end
+  
+  local touches = love.touch.getTouches()
+ 
+  for i, id in ipairs(touches) do
+    local x, y = love.touch.getPosition(id)
+    if button_pressed(x,y) then player:fire() 
+    
+    elseif player.x < x then
+      player.x = player.x + (player.speed * dt)
+      if player.x > x then player.x = x end
+
+
+    --touched to left
+    elseif player.x > x then
+      player.x = player.x - (player.speed * dt)
+      if player.x < x then player.x = x end
+    end
+
+    --touched to down
+    if player.y > y then
+      player.y = player.y - (player.speed * dt)
+      if player.y < y then player.y = y end
+
+
+    --touched to up
+     elseif player.y < y then
+      player.y = player.y + (player.speed * dt)
+      if player.y > y then player.y = y end
+    end
+    
+    
   end
   
   
@@ -134,16 +207,24 @@ function enemySpawn(dt)
   end
 end
 
+function button_pressed(x,y)
+  if x > love.graphics:getWidth() - 200 and x < love.graphics:getWidth() - 110 and y > love.graphics:getHeight() - 180 and y < love.graphics:getHeight() - 90 then
+    return true
+  end
+  return false
+end
 
 function love.draw()
   --background
-  love.graphics.draw(background_image)
+  love.graphics.draw(background_image,1024,0,math.rad(90))
+  
+  
   
   -- draw a player
   if player.isAlive then
     love.graphics.draw(player.image, player.x, player.y,0,scale_factor, scale_factor)
   else
-    love.graphics.print("Press 'R' to restart", love.graphics:getWidth()/2-50, love.graphics:getHeight()/2-10)
+    love.graphics.print("Press anywhere to restart", love.graphics:getWidth()/2-50, love.graphics:getHeight()/2-10)
   end
   
   --draw the enemies
@@ -158,5 +239,8 @@ function love.draw()
   
   love.graphics.setColor(255, 255, 255)
   love.graphics.print("SCORE: " .. tostring(score), 400, 10)
+  
+  --draw a button
+  love.graphics.draw(button_image, love.graphics:getWidth() - 200, love.graphics:getHeight() - 160)
     
 end
