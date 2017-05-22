@@ -6,10 +6,10 @@ Enemy = require "objects/enemy"
 createEnemyTimerMax = 0.6
 createEnemyTimer = createEnemyTimerMax
 score = 0
+scale_factor = 0.9
 
 -- More storage
 enemies = {} -- array of current enemies on screen
-
 
 -- Returns true if two boxes overlap, false if they don't
 -- x1,y1 are the left-top coords of the first box, while w1,h1 are its width and height
@@ -24,11 +24,11 @@ end
 function love.load()
     --background music
     background_music = love.audio.newSource("/assets/sounds/Mecha Collection.wav")
-    background_image = love.graphics.newImage("/assets/images/space1.jpg")
+    background_image = love.graphics.newImage("/assets/images/space.jpeg")
     
     love.audio.play(background_music)
 
-    player = player:new(300,300)
+    player = player:new(love.graphics.getWidth()/2 - 50,love.graphics.getHeight()-150)
     player.image = love.graphics.newImage("/assets/images/plane.png")
     player.fire_audio = love.audio.newSource("/assets/sounds/gun-sound.wav")
     player.bullet_image = love.graphics.newImage("/assets/images/bullet.png")
@@ -69,12 +69,14 @@ function love.keyreleased(key)
     player:reset(300,300)
     enemies = {}
     score = 0
+    createEnemyTimerMax = 0.6
   end
 end
 
 function love.update(dt)
   
   player.cooldown = player.cooldown - 1
+  createEnemyTimerMax = createEnemyTimerMax - 0.0001
   enemySpawn(dt)
   detectKey(dt)
   
@@ -90,7 +92,7 @@ function love.update(dt)
   for i, enemy in ipairs(enemies) do
     enemy.y = enemy.y + (enemy.speed * dt)
 
-    if enemy.y > 850 then -- remove enemies when they pass off the screen
+    if enemy.y > love.graphics.getHeight() then -- remove enemies when they pass off the screen
       table.remove(enemies, i)
     end
   end
@@ -135,18 +137,18 @@ end
 
 function love.draw()
   --background
-  love.graphics.draw(background_image,0,0,0,1.7)
+  love.graphics.draw(background_image)
   
   -- draw a player
   if player.isAlive then
-    love.graphics.draw(player.image, player.x, player.y)
+    love.graphics.draw(player.image, player.x, player.y,0,scale_factor, scale_factor)
   else
     love.graphics.print("Press 'R' to restart", love.graphics:getWidth()/2-50, love.graphics:getHeight()/2-10)
   end
   
   --draw the enemies
   for _, enemy in pairs(enemies) do
-    love.graphics.draw(enemy.image, enemy.x, enemy.y)
+    love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, scale_factor, scale_factor)
   end
   
   --draw the bullets
