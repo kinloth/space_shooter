@@ -1,7 +1,7 @@
 --import the objects
 player = require "objects/player"
 Enemy = require "objects/enemy"
-local anim8 = require 'anim8'
+local anim8 = require 'lib/anim8'
 
 --some global variables
 createEnemyTimerMax = 0.6

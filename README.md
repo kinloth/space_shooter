@@ -14,6 +14,8 @@ Project started only to learn more about the LÖVE framework
 ## License
 
 [![CC0](https://licensebuttons.net/p/zero/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)
+
+
 I just have no interest in the rights of this work.
 
 ## Credits
@@ -25,7 +27,7 @@ Explosion audio:
 Duckstruction - [OpenGameArt] (https://opengameart.org/content/explosion-0)
 
 Plane and bullets images:
-chabull - [OpenGameArt](https://opengameart.org/content/aircrafts)
+chabull - [OpenGameArt] (https://opengameart.org/content/aircrafts)
 
 Shoot sound:
 Luke.RUSTLTD - [OpenGameArt] (http://opengameart.org/content/gunloop-8bit)
