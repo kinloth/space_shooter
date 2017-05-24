@@ -7,6 +7,7 @@ function enemy:new(x, y, speed, image)
   enemy.x = x
   enemy.y = y
   enemy.speed = speed
+  enemy.dead = false
   
   return enemy
 

@@ -1,6 +1,7 @@
 --import the objects
 player = require "objects/player"
 Enemy = require "objects/enemy"
+local anim8 = require 'anim8'
 
 --some global variables
 createEnemyTimerMax = 0.6
@@ -23,6 +24,13 @@ function love.load()
     player.fire_audio = love.audio.newSource("/assets/sounds/gun-sound.wav")
     player.bullet_image = love.graphics.newImage("/assets/images/bullet.png")
     enemy_image = love.graphics.newImage("/assets/images/enemy.png")    
+    
+    
+    explosion_animation = love.graphics.newImage("/assets/images/M484ExplosionSet1.png")
+                            -- frame, image,    offsets, border
+    local g32 = anim8.newGrid(32,32, explosion_animation:getWidth(),explosion_animation:getHeight(), 92, 10 , 0)
+    
+    explosion = anim8.newAnimation(g32('1-7',1), 0.5)
     
     --play the background music
     love.audio.play(background_music)
@@ -126,7 +134,6 @@ end
 
 -- update every frame
 function love.update(dt)
-  
   --player fire cooldown
   player.cooldown = player.cooldown - 1
   
@@ -149,12 +156,9 @@ function love.update(dt)
     enemy.y = enemy.y + (enemy.speed * dt)
 
     if enemy.y > love.graphics.getHeight() then -- remove enemies when they pass off the screen
-      table.remove(enemies, i)
+      table.remove(enemy, i)
     end
   end
-  
-  
-  
   
 -- since there will be fewer enemies on screen than bullets we'll loop them first
   for i, enemy in ipairs(enemies) do
@@ -162,7 +166,10 @@ function love.update(dt)
       if CheckCollision(enemy.x, enemy.y, enemy.image:getWidth(), enemy.image:getHeight(), 
           bullet.x, bullet.y, player.bullet_image:getWidth(), player.bullet_image:getHeight()) then
         table.remove(player.bullets, j)
-        table.remove(enemies, i)
+        
+        enemy.dead = true
+        love.audio.play(love.audio.newSource("/assets/sounds/explosion.wav"))
+        
         score = score + 1
       end
     end
@@ -214,15 +221,20 @@ function love.draw()
   end
   
   --draw the enemies
-  for _, enemy in pairs(enemies) do
-    love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, scale_factor, scale_factor)
+  for i, enemy in ipairs(enemies) do
+    if(enemy.dead == false) then
+      love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, scale_factor, scale_factor)
+    else
+      explosion:draw(   explosion_animation, enemy.x + enemy.image:getWidth()/2 - 20, enemy.y + enemy.image:getHeight()/2-20) 
+      table.remove(enemies, i)
+    end
   end
   
   --draw the bullets
   for _,v in pairs(player.bullets) do
       love.graphics.draw(player.bullet_image, v.x, v.y)
   end
-  
+
   --change color and print score
   love.graphics.setColor(255, 255, 255)
   love.graphics.print("SCORE: " .. tostring(score), 400, 10)
