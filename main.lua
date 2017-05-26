@@ -25,6 +25,7 @@ function love.load()
     player.bullet_image = love.graphics.newImage("/assets/images/bullet.png")
     enemy_image = love.graphics.newImage("/assets/images/enemy.png")    
     
+    direcional_image = love.graphics.newImage("/assets/images/transparentLight49.png")
     
     explosion_animation = love.graphics.newImage("/assets/images/M484ExplosionSet1.png")
                             -- frame, image,    offsets, border
@@ -241,5 +242,6 @@ function love.draw()
   
   --draw a button
   love.graphics.draw(button_image, love.graphics:getWidth() - 200, love.graphics:getHeight() - 160)
+  love.graphics.draw(direcional_image, 100, love.graphics:getHeight() - 160)
     
 end
